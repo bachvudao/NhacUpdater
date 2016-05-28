@@ -1,0 +1,19 @@
+{
+  "name": "NhacUpdater",
+  "version": "1.0.0",
+  "description": "An app to automatically update database with latest Vietnamese music",
+  "main": "NhacUpdater.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bach V Dao",
+  "license": "ISC",
+  "dependencies": {
+    "request": "*",
+    "rx-node": "*",
+    "rx": "*",
+    "chalk": "*",
+    "moment": "*",
+    "config.json": "*"
+  }
+}
