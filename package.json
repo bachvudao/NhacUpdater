@@ -4,7 +4,8 @@
   "description": "An app to automatically update database with latest Vietnamese music",
   "main": "NhacUpdater.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node NhacUpdater.js"
   },
   "author": "Bach V Dao",
   "license": "ISC",
@@ -16,7 +17,7 @@
     "moment": "*",
     "config.json": "*",
     "tedious": "*",
-    "tedious-connection-pool":"*",
+    "tedious-connection-pool":"git://github.com/bachvudao/tedious-connection-pool.git",
     "rxjs": "*"
   }
 }
