@@ -17,7 +17,7 @@
     "moment": "*",
     "config.json": "*",
     "tedious": "*",
-    "tedious-connection-pool":"git://github.com/bachvudao/tedious-connection-pool.git",
-    "rxjs": "*"
+    "mssql": "*",
+    "promise": "*"
   }
 }
