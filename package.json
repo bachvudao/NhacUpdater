@@ -16,7 +16,6 @@
     "chalk": "*",
     "moment": "*",
     "config.json": "*",
-    "tedious": "*",
     "mssql": "*",
     "promise": "*"
   }
