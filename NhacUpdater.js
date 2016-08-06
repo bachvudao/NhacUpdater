@@ -5,6 +5,7 @@ var NhacUpdater = function() {
     var configProvider = require('./NhacUpdaterConfig.js');
     var connection = require('./DatabaseAccessor.js');
     var logger = require('./Logger.js');
+    var Rx = require('rx');
 
     var config;
 
@@ -15,6 +16,12 @@ var NhacUpdater = function() {
     };
 
     this.update = function() {
+        return this.getSongs().flatMap(function(songs) {
+            return connection.insert(songs);
+        });
+    }
+
+    this.getSongs = function() {
         ensureConfig();
 
         var key = config.Zing.apiKey;
@@ -27,17 +34,23 @@ var NhacUpdater = function() {
         logger.info('Getting latest songs for week %s/%s.', weekNumber, year);
         logger.info('Requesting %s.', url);
 
-        request(url, function(err, response, body) {
-            if (!err && response.statusCode == 200) {
-                var result = JSON.parse(body);
-                var week = result.week;
-                var songs = result.item;
-                logger.info("Received response: %d songs.", songs.length);
+        return Rx.Observable.create(function(obs) {
 
-                connection.insert(songs);
-            } else {
-                logger.error("Error: %s. Response: %s. Body: %s", err, util.inspect(response), util.inspect(body));
-            }
+
+            request(url, function(err, response, body) {
+                if (!err && response.statusCode == 200) {
+                    var result = JSON.parse(body);
+                    var week = result.week;
+                    var songs = result.item;
+                    logger.info("Received response: %d songs.", songs.length);
+
+                    obs.onNext(songs);
+                    obs.onCompleted();
+                } else {
+                    logger.error("Error: %s. Response: %s. Body: %s", err, util.inspect(response), util.inspect(body));
+                    obs.onError();
+                }
+            });
         });
     };
 };
