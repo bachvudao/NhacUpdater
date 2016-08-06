@@ -1,4 +1,4 @@
-var NhacUpdater = function () {
+var NhacUpdater = function() {
     var request = require('request');
     var util = require('util');
     var moment = require('moment');
@@ -8,13 +8,13 @@ var NhacUpdater = function () {
 
     var config;
 
-    var ensureConfig = function () {
+    var ensureConfig = function() {
         if (!config) {
             config = configProvider.read();
         }
     };
 
-    this.update = function () {
+    this.update = function() {
         ensureConfig();
 
         var key = config.Zing.apiKey;
@@ -27,7 +27,7 @@ var NhacUpdater = function () {
         logger.info('Getting latest songs for week %s/%s.', weekNumber, year);
         logger.info('Requesting %s.', url);
 
-        request(url, function (err, response, body) {
+        request(url, function(err, response, body) {
             if (!err && response.statusCode == 200) {
                 var result = JSON.parse(body);
                 var week = result.week;

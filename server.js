@@ -9,9 +9,7 @@ var scheduler = later.parse.text(config.schedule);
 logger.info("Scheduled run set " + config.schedule);
 later.setInterval(execute, scheduler);
 
-function execute(){
-  logger.info("Scheduled run started.");
-  NhacUpdater.update(); 
+function execute() {
+    logger.info("Scheduled run started.");
+    NhacUpdater.update();
 }
-
-
