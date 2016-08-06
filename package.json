@@ -10,13 +10,13 @@
   "author": "Bach V Dao",
   "license": "ISC",
   "dependencies": {
-    "request": "*",
-    "rx-node": "*",
-    "rx": "*",
-    "chalk": "*",
-    "moment": "*",
     "config.json": "*",
+    "moment": "*",
     "mssql": "*",
-    "promise": "*"
+    "promise": "*",
+    "request": "*",
+    "rx": "*",
+    "rx-node": "*",
+    "winston": "^2.2.0"
   }
 }

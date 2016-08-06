@@ -5,7 +5,7 @@ var NhacUpdaterConfig = function(){
 
     this.read = function(){
         if(!config){
-            logger.info("Reading config");
+            logger.info("Reading config from conf.json");
             config = configReader(('./conf.json'));
         }
         

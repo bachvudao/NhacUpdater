@@ -1,22 +1,27 @@
-var Logger = function () {
-    var chalk = require('chalk');
-    var moment = require('moment');
-    var util = require('util');
+var winston = require('winston');
+var moment = require('moment');
 
-    var logTime = function() {
-        return chalk.magenta(moment().format('YYYY-MM-DD hh:mm:ss.SSS'));
-    }
+winston.remove(winston.transports.Console);
+winston.add(winston.transports.Console, 
+    {
+      timestamp: function(){
+        return moment().format("YYYY-MM-DD HH:mm:ss.SSS"); 
+      },
+      colorize: true,
+      formatter: function(options){
+                  return options.timestamp() + ' ' + options.level.toUpperCase() + ': ' + (options.message == undefined ? ' ' : options.message);
+                          },
+      level: 'info'
+    });
 
-    this.error = function() {
-        arguments[0] = chalk.bold.red(arguments[0]);
-        process.stdout.write(logTime() + " " + util.format.apply(null, arguments)  + "\n");
-    }
-    
-    this.info = function() {
-        process.stdout.write(logTime() + " " + util.format.apply(null, arguments) + "\n");
-    }
+winston.add(winston.transports.File, 
+    {
+      level: 'info',
+      filename: './logs/NhacUpdater.log',
+      maxSize: 52428800, // 50 mb
+      maxFiles: 10
+    });
 
-    this.highlight = chalk.bold.green;
-};
+winston.info("Initialized logging");
 
-module.exports = new Logger();
+module.exports = winston;

@@ -24,15 +24,15 @@ var NhacUpdater = function () {
         var year = moment().format("gggg");
         var url = util.format(url_format, key, weekNumber, 1, year);
 
-        logger.info('Getting latest songs for week ' + logger.highlight('%s/%s.'), weekNumber, year);
-        logger.info('Requesting ' + logger.highlight('%s.'), url);
+        logger.info('Getting latest songs for week %s/%s.', weekNumber, year);
+        logger.info('Requesting %s.', url);
 
         request(url, function (err, response, body) {
             if (!err && response.statusCode == 200) {
                 var result = JSON.parse(body);
                 var week = result.week;
                 var songs = result.item;
-                logger.info("Received response: " + logger.highlight("%d songs."), songs.length);
+                logger.info("Received response: %d songs.", songs.length);
 
                 connection.insert(songs);
             } else {
