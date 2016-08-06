@@ -11,5 +11,13 @@ later.setInterval(execute, scheduler);
 
 function execute() {
     logger.info("Scheduled run started.");
-    NhacUpdater.update();
+    NhacUpdater.update().subscribe(function(x) {}, function(err) {
+        logger.error('Error while updating songs: ' + err);
+        logger.info('Finished scheduled run. Waiting for next run');
+        logger.info('===============================================================');
+
+    }, function() {
+        logger.info('Finished scheduled run. Waiting for next run');
+        logger.info('===============================================================');
+    })
 }

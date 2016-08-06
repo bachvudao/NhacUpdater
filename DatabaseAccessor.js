@@ -4,6 +4,7 @@ var Connection = function() {
     var logger = require('./Logger.js');
     var util = require('util');
     var promise = require('promise');
+    var Rx = require('rx');
     var config;
 
     var setupConfig = function() {
@@ -42,18 +43,20 @@ var Connection = function() {
         request.input('thumbnail', sql.VarChar, song.thumbnail);
         request.input('url_320', sql.VarChar, song.source['320']);
 
-        return request.query("UPDATE nhac SET id=@id WHERE id=@id IF @@ROWCOUNT=0 INSERT INTO nhac (id, title, artist, lyric, thumbnail, url_320) VALUES (@id, @title, @artist, @lyric, @thumbnail, @url_320);")
-            .then(function(record) {
+        return Rx.Observable.fromPromise(request.query("UPDATE nhac SET id=@id WHERE id=@id IF @@ROWCOUNT=0 INSERT INTO nhac (id, title, artist, lyric, thumbnail, url_320) VALUES (@id, @title, @artist, @lyric, @thumbnail, @url_320);"))
+            .tap(function(record) {
                 logger.info("Finished request for song id: %s", song.song_id);
-            }).catch(function(err) {
+            }).catch(function() {
                 logger.error("Error while inserting row: %s.", err);
+                return Rx.Observable.return(undefined);
             });
     };
 
     this.insert = function(songs) {
         logger.info("Adding %s songs", songs.length);
 
-        sql.connect(setupConfig()).then(function() {
+        return Rx.Observable.fromPromise(
+            sql.connect(setupConfig())).flatMap(function() {
             logger.info("Got a connection to database");
 
             var songUpdates = [];
@@ -61,12 +64,14 @@ var Connection = function() {
                 songUpdates.push(executeInsertSong(song));
             });
 
-            promise.all(songUpdates).then(function() {
+            return Rx.Observable.merge(songUpdates).doOnCompleted(function() {
                 logger.info("Finished with all updates. Closing connection.");
                 sql.close();
-            })
+            });
         }).catch(function(err) {
             logger.error("Could not connect to db %s", err);
+
+            return Rx.Observable.return(undefined);
         });
     };
 };
