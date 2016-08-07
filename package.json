@@ -5,7 +5,7 @@
   "main": "NhacUpdater.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "forever start -s server.js"
+    "start": "forever start -s server.js --id 'NhacUpdater'"
   },
   "author": "Bach V Dao",
   "license": "ISC",
