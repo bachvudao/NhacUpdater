@@ -6,7 +6,7 @@ var config = require('./ConfigStore.js');
 var scheduler = later.parse.text(config.schedule);
 
 logger.info("Starting one immediate run");
-execute().subscribe(function (x) {
+execute().subscribe(function(x) {}, function(err) {}, function() {
 
     logger.info("Scheduled run set " + config.schedule);
     later.setInterval(execute, scheduler);
