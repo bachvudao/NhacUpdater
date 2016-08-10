@@ -1,5 +1,5 @@
 var Connection = function() {
-    var configProvider = require('./NhacUpdaterConfig.js');
+    var appConfig = require('./ConfigStore.js');
     var sql = require('mssql');
     var logger = require('./Logger.js');
     var util = require('util');
@@ -8,7 +8,6 @@ var Connection = function() {
     var config;
 
     var setupConfig = function() {
-        var appConfig = configProvider.read();
         if (!config) {
             config = {
                 user: appConfig.db.username,
