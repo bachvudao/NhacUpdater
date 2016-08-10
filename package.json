@@ -10,7 +10,7 @@
   "author": "Bach V Dao",
   "license": "ISC",
   "dependencies": {
-    "config.json": "*",
+    "mkdirp": "^0.5.1",
     "moment": "*",
     "mssql": "*",
     "promise": "*",

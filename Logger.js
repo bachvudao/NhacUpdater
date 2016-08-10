@@ -1,6 +1,6 @@
 var winston = require('winston');
 var moment = require('moment');
-var config = require('./NhacUpdaterConfig.js').read();
+var config = require('./ConfigStore.js');
 var path = require('path');
 var mkdirp = require('mkdirp');
 

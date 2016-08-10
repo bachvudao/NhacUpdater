@@ -2,18 +2,11 @@ var NhacUpdater = function() {
     var request = require('request');
     var util = require('util');
     var moment = require('moment');
-    var configProvider = require('./NhacUpdaterConfig.js');
+    var config = require('./ConfigStore.js');
     var connection = require('./DatabaseAccessor.js');
     var logger = require('./Logger.js');
     var Rx = require('rx');
 
-    var config;
-
-    var ensureConfig = function() {
-        if (!config) {
-            config = configProvider.read();
-        }
-    };
 
     this.update = function() {
         return this.getSongs().flatMap(function(songs) {
@@ -22,7 +15,6 @@ var NhacUpdater = function() {
     }
 
     this.getSongs = function() {
-        ensureConfig();
 
         var key = config.Zing.apiKey;
         var url_format = 'http://api.mp3.zing.vn/api/mobile/charts/getchartsinfo?keycode=%s&requestdata={"week":%s,"id":%d,"year":%s,"start":0,"length":40}&fromvn=0';
