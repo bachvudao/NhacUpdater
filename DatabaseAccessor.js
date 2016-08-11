@@ -1,7 +1,7 @@
 var Connection = function() {
     var appConfig = require('./ConfigStore.js');
     var sql = require('mssql');
-    var logger = require('./Logger.js');
+    var logger = require('./Logger.js')('DatabaseAccessor');
     var util = require('util');
     var promise = require('promise');
     var Rx = require('rx');

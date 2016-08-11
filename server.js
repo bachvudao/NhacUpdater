@@ -1,6 +1,6 @@
 var NhacUpdater = require("./NhacUpdater.js");
 var later = require('later');
-var logger = require('./Logger.js');
+var logger = require('./Logger.js')('server');
 var config = require('./ConfigStore.js');
 
 var scheduler = later.parse.text(config.schedule);
