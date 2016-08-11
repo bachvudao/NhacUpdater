@@ -4,7 +4,7 @@ var NhacUpdater = function() {
     var moment = require('moment');
     var config = require('./ConfigStore.js');
     var connection = require('./DatabaseAccessor.js');
-    var logger = require('./Logger.js');
+    var logger = require('./Logger.js')('NhacUpdater');
     var Rx = require('rx');
 
 

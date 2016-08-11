@@ -1,36 +1,27 @@
-var winston = require('winston');
-var moment = require('moment');
+var bunyan = require('bunyan');
 var config = require('./ConfigStore.js');
-var path = require('path');
-var mkdirp = require('mkdirp');
 
-winston.remove(winston.transports.Console);
-winston.add(winston.transports.Console, {
-    timestamp: function() {
-        return moment().format("YYYY-MM-DD HH:mm:ss.SSS");
-    },
-    colorize: true,
-    formatter: function(options) {
-        return options.timestamp() + ' ' + options.level.toUpperCase() + ': ' + (options.message == undefined ? ' ' : options.message);
-    },
-    level: 'info'
+var logFactory = bunyan.createLogger({
+  name : 'app',
+  streams: [{
+      level: 'info',
+      stream: process.stdout
+  },
+  {
+      level: 'info',
+      type: 'rotating-file',
+      path: config.logging.fileLocation,
+      period: '1d',
+      count: 10
+  } ]
 });
 
-if (config.logging.fileLocation) {
+logFactory.info("Set up logging to file " + config.logging.fileLocation);
 
-  mkdirp.sync(path.dirname(config.logging.fileLocation));
+logFactory.info("Initialized logging");
 
-
-    winston.add(winston.transports.File, {
-        level: 'info',
-        filename: config.logging.fileLocation,
-        maxSize: 52428800, // 50 mb
-        maxFiles: 10
-    });
-
-    winston.info("Set up logging to file " + config.logging.fileLocation);
+var createLogger = function(name){
+  return name ? logFactory.child({layer: name}) : logFactory;
 }
 
-winston.info("Initialized logging");
-
-module.exports = winston;
+module.exports = createLogger;
