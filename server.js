@@ -1,9 +1,11 @@
-var NhacUpdater = require("./NhacUpdater.js");
-var later = require('later');
-var logger = require('./Logger.js')('server');
-var config = require('./ConfigStore.js');
+"use strict";
 
-var scheduler = later.parse.text(config.schedule);
+const NhacUpdater = require("./NhacUpdater.js");
+const later = require('later');
+const logger = require('./Logger.js')('server');
+const config = require('./ConfigStore.js');
+
+const scheduler = later.parse.text(config.schedule);
 
 logger.info("Starting one immediate run");
 execute().subscribe(function(x) {}, function(err) {}, function() {

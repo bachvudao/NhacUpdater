@@ -1,12 +1,15 @@
-var NhacUpdater = function() {
-    var request = require('request');
-    var util = require('util');
-    var moment = require('moment');
-    var config = require('./ConfigStore.js');
-    var connection = require('./DatabaseAccessor.js');
-    var logger = require('./Logger.js')('NhacUpdater');
-    var Rx = require('rx');
+"use strict";
 
+const NhacUpdater = function() {
+    const request = require('request');
+    const util = require('util');
+    const moment = require('moment');
+    const config = require('./ConfigStore.js');
+    const connection = require('./DatabaseAccessor.js');
+    const logger = require('./Logger.js')('NhacUpdater');
+    const Rx = require('rx');
+
+    const url_format = 'http://api.mp3.zing.vn/api/mobile/charts/getchartsinfo?keycode=%s&requestdata={"week":%s,"id":%d,"year":%s,"start":0,"length":40}&fromvn=0';
 
     this.update = function() {
         return this.getSongs().flatMap(function(songs) {
@@ -16,12 +19,11 @@ var NhacUpdater = function() {
 
     this.getSongs = function() {
 
-        var key = config.Zing.apiKey;
-        var url_format = 'http://api.mp3.zing.vn/api/mobile/charts/getchartsinfo?keycode=%s&requestdata={"week":%s,"id":%d,"year":%s,"start":0,"length":40}&fromvn=0';
+        const key = config.Zing.apiKey;
 
-        var weekNumber = moment().format("W");
-        var year = moment().format("gggg");
-        var url = util.format(url_format, key, weekNumber, 1, year);
+        const weekNumber = moment().format("W");
+        const year = moment().format("gggg");
+        const url = util.format(url_format, key, weekNumber, 1, year);
 
         logger.info('Getting latest songs for week %s/%s.', weekNumber, year);
         logger.info('Requesting %s.', url);
@@ -31,9 +33,9 @@ var NhacUpdater = function() {
 
             request(url, function(err, response, body) {
                 if (!err && response.statusCode == 200) {
-                    var result = JSON.parse(body);
-                    var week = result.week;
-                    var songs = result.item;
+                    const result = JSON.parse(body);
+                    const week = result.week;
+                    const songs = result.item;
                     logger.info("Received response: %d songs.", songs.length);
 
                     obs.onNext(songs);

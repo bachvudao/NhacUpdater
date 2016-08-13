@@ -1,27 +1,30 @@
-var bunyan = require('bunyan');
-var config = require('./ConfigStore.js');
+"use strict";
 
-var logFactory = bunyan.createLogger({
-  name : 'app',
-  streams: [{
-      level: 'info',
-      stream: process.stdout
-  },
-  {
-      level: 'info',
-      type: 'rotating-file',
-      path: config.logging.fileLocation,
-      period: '1d',
-      count: 10
-  } ]
+const bunyan = require('bunyan');
+const config = require('./ConfigStore.js');
+
+const defaultLogger = bunyan.createLogger({
+    name: 'app',
+    streams: [{
+        level: 'info',
+        stream: process.stdout
+    }, {
+        level: 'info',
+        type: 'rotating-file',
+        path: config.logging.fileLocation,
+        period: '1d',
+        count: 10
+    }]
 });
 
-logFactory.info("Set up logging to file " + config.logging.fileLocation);
+defaultLogger.info("Set up logging to file " + config.logging.fileLocation);
 
-logFactory.info("Initialized logging");
+defaultLogger.info("Initialized logging");
 
-var createLogger = function(name){
-  return name ? logFactory.child({layer: name}) : logFactory;
+const createLogger = function(name) {
+    return name ? defaultLogger.child({
+        layer: name
+    }) : defaultLogger;
 }
 
 module.exports = createLogger;

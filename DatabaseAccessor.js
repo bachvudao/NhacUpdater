@@ -1,13 +1,15 @@
-var Connection = function() {
-    var appConfig = require('./ConfigStore.js');
-    var sql = require('mssql');
-    var logger = require('./Logger.js')('DatabaseAccessor');
-    var util = require('util');
-    var promise = require('promise');
-    var Rx = require('rx');
-    var config;
+"use strict";
 
-    var setupConfig = function() {
+const Connection = function() {
+    const appConfig = require('./ConfigStore.js');
+    const sql = require('mssql');
+    const logger = require('./Logger.js')('DatabaseAccessor');
+    const util = require('util');
+    const promise = require('promise');
+    const Rx = require('rx');
+    let config;
+
+    const setupConfig = function() {
         if (!config) {
             config = {
                 user: appConfig.db.username,
@@ -24,7 +26,7 @@ var Connection = function() {
         return config;
     };
 
-    var executeInsertSong = function(song) {
+    const executeInsertSong = function(song) {
         logger.info("Executing request for id: %s, title: %s, artist: %s, lyric: %s, thumbnail: %s, url: %s",
             song.song_id,
             song.title,
@@ -33,7 +35,7 @@ var Connection = function() {
             song.thumbnail,
             song.source['320']);
 
-        var request = new sql.Request();
+        const request = new sql.Request();
 
         request.input('id', sql.Int, song.song_id);
         request.input('title', sql.NVarChar, song.title);
@@ -58,7 +60,7 @@ var Connection = function() {
             sql.connect(setupConfig())).flatMap(function() {
             logger.info("Got a connection to database");
 
-            var songUpdates = [];
+            const songUpdates = [];
             songs.forEach(function(song) {
                 songUpdates.push(executeInsertSong(song));
             });
