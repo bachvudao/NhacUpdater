@@ -1,31 +1,25 @@
-var Connection = function() {
-    var appConfig = require('./ConfigStore.js');
-    var sql = require('mssql');
-    var logger = require('./Logger.js')('DatabaseAccessor');
-    var util = require('util');
-    var promise = require('promise');
-    var Rx = require('rx');
-    var config;
+"use strict";
 
-    var setupConfig = function() {
-        if (!config) {
-            config = {
-                user: appConfig.db.username,
-                password: appConfig.db.password,
-                server: appConfig.db.server,
-                database: appConfig.db.database,
-                // If you are on Azure SQL Database, you need these next options.  
-                options: {
-                    encrypt: true
-                }
-            };
-        }
+const sql = require('mssql');
+const Rx = require('rx');
 
-        return config;
-    };
+class DatabaseConnection {
+    constructor(logFactory, config) {
+        this.config = {
+            user: config.username,
+            password: config.password,
+            server: config.server,
+            database: config.database,
+            // If you are on Azure SQL Database, you need these next options.
+            options: {
+                encrypt: true
+            }
+        };
+        this.logger = logFactory.createLogger('DatabaseConnection');
+    }
 
-    var executeInsertSong = function(song) {
-        logger.info("Executing request for id: %s, title: %s, artist: %s, lyric: %s, thumbnail: %s, url: %s",
+    executeInsertSong(song) {
+        this.logger.info("Executing request for id: %s, title: %s, artist: %s, lyric: %s, thumbnail: %s, url: %s",
             song.song_id,
             song.title,
             song.artist,
@@ -33,7 +27,7 @@ var Connection = function() {
             song.thumbnail,
             song.source['320']);
 
-        var request = new sql.Request();
+        const request = new sql.Request();
 
         request.input('id', sql.Int, song.song_id);
         request.input('title', sql.NVarChar, song.title);
@@ -43,36 +37,36 @@ var Connection = function() {
         request.input('url_320', sql.VarChar, song.source['320']);
 
         return Rx.Observable.fromPromise(request.query("UPDATE nhac SET id=@id WHERE id=@id IF @@ROWCOUNT=0 INSERT INTO nhac (id, title, artist, lyric, thumbnail, url_320) VALUES (@id, @title, @artist, @lyric, @thumbnail, @url_320);"))
-            .tap(function(record) {
-                logger.info("Finished request for song id: %s", song.song_id);
-            }).catch(function() {
-                logger.error("Error while inserting row: %s.", err);
+            .tap(record => {
+                this.logger.info("Finished request for song id: %s", song.song_id);
+            }).catch(err => {
+                this.logger.error("Error while inserting row: %s.", err);
                 return Rx.Observable.return(undefined);
             });
-    };
+    }
 
-    this.insert = function(songs) {
-        logger.info("Adding %s songs", songs.length);
+    insert(songs) {
+        this.logger.info("Adding %s songs", songs.length);
 
-        return Rx.Observable.fromPromise(
-            sql.connect(setupConfig())).flatMap(function() {
-            logger.info("Got a connection to database");
+        return Rx.Observable.fromPromise(sql.connect(this.config))
+                            .flatMap(() => {
+                              this.logger.info("Got a connection to database");
 
-            var songUpdates = [];
-            songs.forEach(function(song) {
-                songUpdates.push(executeInsertSong(song));
-            });
+                              const songUpdates = [];
+                              songs.forEach(song => {
+                                songUpdates.push(this.executeInsertSong(song));
+                              });
 
-            return Rx.Observable.merge(songUpdates).doOnCompleted(function() {
-                logger.info("Finished with all updates. Closing connection.");
-                sql.close();
-            });
-        }).catch(function(err) {
-            logger.error("Could not connect to db %s", err);
+                              return Rx.Observable.merge(songUpdates).doOnCompleted(() => {
+                                this.logger.info("Finished with all updates. Closing connection.");
+                                sql.close();
+                              });
+        }).catch(err => {
+            this.logger.error("Could not connect to db %s", err);
 
             return Rx.Observable.return(undefined);
         });
-    };
+    }
 };
 
-module.exports = new Connection();
+module.exports = DatabaseConnection;

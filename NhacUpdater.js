@@ -1,45 +1,50 @@
-var NhacUpdater = function() {
-    var request = require('request');
-    var util = require('util');
-    var moment = require('moment');
-    var config = require('./ConfigStore.js');
-    var connection = require('./DatabaseAccessor.js');
-    var logger = require('./Logger.js')('NhacUpdater');
-    var Rx = require('rx');
+"use strict";
+
+const request = require('request');
+const util = require('util');
+const moment = require('moment');
+const Connection = require('./DatabaseAccessor.js');
+const Rx = require('rx');
 
 
-    this.update = function() {
-        return this.getSongs().flatMap(function(songs) {
-            return connection.insert(songs);
-        });
-    }
+class NhacUpdater {
+  
+  constructor(logFactory, apiKey, dbConfig) {
+    this.logger = logFactory.createLogger('NhacUpdater');
+    this.connection = new Connection(logFactory, dbConfig);
+    this.apiKey = apiKey; 
+  }
 
-    this.getSongs = function() {
+  update() {
+    return this.getSongs().flatMap(songs => {
+      return this.connection.insert(songs);
+    });
+  }
 
-        var key = config.Zing.apiKey;
-        var url_format = 'http://api.mp3.zing.vn/api/mobile/charts/getchartsinfo?keycode=%s&requestdata={"week":%s,"id":%d,"year":%s,"start":0,"length":40}&fromvn=0';
+  getSongs() {
 
-        var weekNumber = moment().format("W");
-        var year = moment().format("gggg");
-        var url = util.format(url_format, key, weekNumber, 1, year);
+        const url_format = 'http://api.mp3.zing.vn/api/mobile/charts/getchartsinfo?keycode=%s&requestdata={"week":%s,"id":%d,"year":%s,"start":0,"length":40}&fromvn=0';
 
-        logger.info('Getting latest songs for week %s/%s.', weekNumber, year);
-        logger.info('Requesting %s.', url);
+        const weekNumber = moment().format("W");
+        const year = moment().format("gggg");
+        const url = util.format(url_format, this.apiKey, weekNumber, 1, year);
 
-        return Rx.Observable.create(function(obs) {
+        this.logger.info('Getting latest songs for week %s/%s.', weekNumber, year);
+        this.logger.info('Requesting %s.', url);
 
-
-            request(url, function(err, response, body) {
+        return Rx.Observable.create(obs => {
+            request(url, (err, response, body) => {
                 if (!err && response.statusCode == 200) {
-                    var result = JSON.parse(body);
-                    var week = result.week;
-                    var songs = result.item;
-                    logger.info("Received response: %d songs.", songs.length);
+                    const result = JSON.parse(body);
+                    const week = result.week;
+                    const songs = result.item;
+                    
+                    this.logger.info("Received response: %d songs.", songs.length);
 
                     obs.onNext(songs);
                     obs.onCompleted();
                 } else {
-                    logger.error("Error: %s. Response: %s. Body: %s", err, util.inspect(response), util.inspect(body));
+                    this.logger.error("Error: %s. Response: %s. Body: %s", err, util.inspect(response), util.inspect(body));
                     obs.onError();
                 }
             });
@@ -47,4 +52,4 @@ var NhacUpdater = function() {
     };
 };
 
-module.exports = new NhacUpdater();
+module.exports = NhacUpdater;

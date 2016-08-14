@@ -1,12 +1,22 @@
-var NhacUpdater = require("./NhacUpdater.js");
-var later = require('later');
-var logger = require('./Logger.js')('server');
-var config = require('./ConfigStore.js');
+"use strict";
 
-var scheduler = later.parse.text(config.schedule);
+const NhacUpdater = require("./NhacUpdater.js");
+const later = require('later');
+const LogFactoryType = require('./LogFactory.js');
+const config = require('./conf.json');
+
+const logFactory = new LogFactoryType(config);
+const logger = logFactory.createLogger('server');
+
+const nhacUpdater = new NhacUpdater(logFactory, config.Zing.apiKey, config.db);
+
+const scheduler = later.parse.text(config.schedule);
+
+// heart beat
+later.setInterval(publishHeartbeat, later.parse.text("every 10 mins"));
 
 logger.info("Starting one immediate run");
-execute().subscribe(function(x) {}, function(err) {}, function() {
+execute().subscribe(x => {}, err => {}, () => {
 
     logger.info("Scheduled run set " + config.schedule);
     later.setInterval(execute, scheduler);
@@ -15,13 +25,17 @@ execute().subscribe(function(x) {}, function(err) {}, function() {
 
 function execute() {
     logger.info("Run started.");
-    return NhacUpdater.update().doOnError(function(err) {
+    return nhacUpdater.update().doOnError(err => {
         logger.error('Error while updating songs: ' + err);
         logger.info('Finished scheduled run. Waiting for next run');
         logger.info('===============================================================');
 
-    }).doOnCompleted(function() {
+    }).doOnCompleted(() => {
         logger.info('Finished scheduled run. Waiting for next run');
         logger.info('===============================================================');
     });
+}
+
+function publishHeartbeat(){
+  logger.info("Heartbeat message. App is still alive");
 }
