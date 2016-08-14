@@ -16,7 +16,7 @@ const scheduler = later.parse.text(config.schedule);
 later.setInterval(publishHeartbeat, later.parse.text("every 10 mins"));
 
 logger.info("Starting one immediate run");
-execute().subscribe(function(x) {}, function(err) {}, function() {
+execute().subscribe(x => {}, err => {}, () => {
 
     logger.info("Scheduled run set " + config.schedule);
     later.setInterval(execute, scheduler);
@@ -25,12 +25,12 @@ execute().subscribe(function(x) {}, function(err) {}, function() {
 
 function execute() {
     logger.info("Run started.");
-    return nhacUpdater.update().doOnError(function(err) {
+    return nhacUpdater.update().doOnError(err => {
         logger.error('Error while updating songs: ' + err);
         logger.info('Finished scheduled run. Waiting for next run');
         logger.info('===============================================================');
 
-    }).doOnCompleted(function() {
+    }).doOnCompleted(() => {
         logger.info('Finished scheduled run. Waiting for next run');
         logger.info('===============================================================');
     });
