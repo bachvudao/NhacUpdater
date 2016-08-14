@@ -2,8 +2,13 @@
 
 const NhacUpdater = require("./NhacUpdater.js");
 const later = require('later');
-const logger = require('./Logger.js')('server');
+const LogFactoryType = require('./LogFactory.js');
 const config = require('./ConfigStore.js');
+
+const logFactory = new LogFactoryType(config);
+const logger = logFactory.createLogger('server');
+
+const nhacUpdater = new NhacUpdater(logFactory);
 
 const scheduler = later.parse.text(config.schedule);
 
@@ -20,7 +25,7 @@ execute().subscribe(function(x) {}, function(err) {}, function() {
 
 function execute() {
     logger.info("Run started.");
-    return NhacUpdater.update().doOnError(function(err) {
+    return nhacUpdater.update().doOnError(function(err) {
         logger.error('Error while updating songs: ' + err);
         logger.info('Finished scheduled run. Waiting for next run');
         logger.info('===============================================================');
