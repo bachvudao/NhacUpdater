@@ -7,6 +7,9 @@ const config = require('./ConfigStore.js');
 
 const scheduler = later.parse.text(config.schedule);
 
+// heart beat
+later.setInterval(publishHeartbeat, later.parse.text("every 10 mins"));
+
 logger.info("Starting one immediate run");
 execute().subscribe(function(x) {}, function(err) {}, function() {
 
@@ -26,4 +29,8 @@ function execute() {
         logger.info('Finished scheduled run. Waiting for next run');
         logger.info('===============================================================');
     });
+}
+
+function publishHeartbeat(){
+  logger.info("Heartbeat message. App is still alive");
 }
