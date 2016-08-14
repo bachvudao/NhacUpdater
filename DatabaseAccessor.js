@@ -1,8 +1,6 @@
 "use strict";
 
 const sql = require('mssql');
-const util = require('util');
-const promise = require('promise');
 const Rx = require('rx');
 
 class DatabaseConnection {
