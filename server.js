@@ -3,12 +3,12 @@
 const NhacUpdater = require("./NhacUpdater.js");
 const later = require('later');
 const LogFactoryType = require('./LogFactory.js');
-const config = require('./ConfigStore.js');
+const config = require('./conf.json');
 
 const logFactory = new LogFactoryType(config);
 const logger = logFactory.createLogger('server');
 
-const nhacUpdater = new NhacUpdater(logFactory);
+const nhacUpdater = new NhacUpdater(logFactory, config.Zing.apiKey, config.db);
 
 const scheduler = later.parse.text(config.schedule);
 

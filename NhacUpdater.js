@@ -3,16 +3,16 @@
 const request = require('request');
 const util = require('util');
 const moment = require('moment');
-const config = require('./ConfigStore.js');
 const Connection = require('./DatabaseAccessor.js');
 const Rx = require('rx');
 
 
 class NhacUpdater {
   
-  constructor(logFactory) {
+  constructor(logFactory, apiKey, dbConfig) {
     this.logger = logFactory.createLogger('NhacUpdater');
-    this.connection = new Connection(logFactory); 
+    this.connection = new Connection(logFactory, dbConfig);
+    this.apiKey = apiKey; 
   }
 
   update() {
@@ -24,11 +24,10 @@ class NhacUpdater {
   getSongs() {
 
         const url_format = 'http://api.mp3.zing.vn/api/mobile/charts/getchartsinfo?keycode=%s&requestdata={"week":%s,"id":%d,"year":%s,"start":0,"length":40}&fromvn=0';
-        const key = config.Zing.apiKey;
 
         const weekNumber = moment().format("W");
         const year = moment().format("gggg");
-        const url = util.format(url_format, key, weekNumber, 1, year);
+        const url = util.format(url_format, this.apiKey, weekNumber, 1, year);
 
         this.logger.info('Getting latest songs for week %s/%s.', weekNumber, year);
         this.logger.info('Requesting %s.', url);

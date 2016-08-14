@@ -1,18 +1,17 @@
 "use strict";
 
-const appConfig = require('./ConfigStore.js');
 const sql = require('mssql');
 const util = require('util');
 const promise = require('promise');
 const Rx = require('rx');
 
 class DatabaseConnection {
-    constructor(logFactory) {
+    constructor(logFactory, config) {
         this.config = {
-            user: appConfig.db.username,
-            password: appConfig.db.password,
-            server: appConfig.db.server,
-            database: appConfig.db.database,
+            user: config.username,
+            password: config.password,
+            server: config.server,
+            database: config.database,
             // If you are on Azure SQL Database, you need these next options.
             options: {
                 encrypt: true
