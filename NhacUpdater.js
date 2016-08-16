@@ -47,12 +47,13 @@ class NhacUpdater {
                     const songs = result.item;
 
                     this.logger.info("Received response: %d songs.", songs.length);
+                    
                     this.notify("Number of songs to update: " + songs.length);
 
                     obs.onNext(songs);
                     obs.onCompleted();
                 } else {
-                    this.logger.error("Error: %s. Response: %s. Body: %s", err, util.inspect(response), util.inspect(body));
+                    this.logger.error({err: err, res: response}, "Error while getting songs");
                     obs.onError();
                 }
             });
