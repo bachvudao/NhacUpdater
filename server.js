@@ -4,34 +4,41 @@ const NhacUpdater = require("./NhacUpdater.js");
 const later = require('later');
 const LogFactoryType = require('./LogFactory.js');
 const config = require('./conf.json');
+const SlackNotifier = require('./SlackNotifier.js');
+const Rx = require('rx');
 
 const logFactory = new LogFactoryType(config);
 const logger = logFactory.createLogger('server');
 
-const nhacUpdater = new NhacUpdater(logFactory, config.Zing.apiKey, config.db);
+let slackNotifier = undefined;
+if(config.slack){
+  slackNotifier = new SlackNotifier(logFactory, config.slack);
+}
+
+const nhacUpdater = new NhacUpdater(logFactory, config.Zing.apiKey, config.db, slackNotifier);
 
 const scheduler = later.parse.text(config.schedule);
+
 
 // heart beat
 later.setInterval(publishHeartbeat, later.parse.text("every 10 mins"));
 
-logger.info("Starting one immediate run");
-execute().subscribe(x => {}, err => {}, () => {
+const timer = new Rx.Subject();
+later.setInterval(() => {timer.onNext(1);}, scheduler);
 
-    logger.info("Scheduled run set " + config.schedule);
-    later.setInterval(execute, scheduler);
-
+timer.startWith(0).subscribe(val => {
+  execute().finally(() => {
+    logger.info('Waiting for next schedule run ' + later.schedule(scheduler).next(1));
+    logger.info('===============================================================');
+  }).subscribe();
 });
 
 function execute() {
     logger.info("Run started.");
     return nhacUpdater.update().doOnError(err => {
         logger.error('Error while updating songs: ' + err);
-        logger.info('Finished scheduled run. Waiting for next run');
-        logger.info('===============================================================');
-
-    }).doOnCompleted(() => {
-        logger.info('Finished scheduled run. Waiting for next run');
+    }).finally(() => {
+        logger.info('Finished one run.');        
         logger.info('===============================================================');
     });
 }

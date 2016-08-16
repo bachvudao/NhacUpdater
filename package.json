@@ -17,6 +17,7 @@
     "promise": "*",
     "request": "*",
     "rx": "*",
-    "rx-node": "*"
+    "rx-node": "*",
+    "slack-node": "^0.2.0"
   }
 }
