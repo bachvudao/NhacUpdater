@@ -18,6 +18,7 @@
     "request": "*",
     "rx": "*",
     "rx-node": "*",
-    "slack-node": "^0.2.0"
+    "slack-node": "^0.2.0",
+    "string-template": "^1.0.0"
   }
 }

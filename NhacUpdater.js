@@ -1,6 +1,7 @@
 "use strict";
 
 const request = require('request');
+const format = require('string-template');
 const util = require('util');
 const moment = require('moment');
 const Connection = require('./DatabaseAccessor.js');
@@ -9,14 +10,18 @@ const Rx = require('rx');
 
 class NhacUpdater {
 
-    constructor(logFactory, apiKey, dbConfig, slackUpdater) {
+    constructor(logFactory, config, slackUpdater) {
         this.logger = logFactory.createLogger('NhacUpdater');
-        this.connection = new Connection(logFactory, dbConfig);
+        this.connection = new Connection(logFactory, config.db);
+        this.config = config;
         this.slackUpdater = slackUpdater;
-        this.apiKey = apiKey;
     }
 
     update() {
+
+        this.notify("Starting NhacUpdater Run");
+        this.logger.info("Starting NhacUpdater Run");
+
         return this.getSongs().flatMap(songs => {
             return this.connection.insert(songs);
         }).doOnError(err => {
@@ -27,44 +32,84 @@ class NhacUpdater {
     }
 
     getSongs() {
+        const charts = Rx.Observable.from(this.config.charts);
+        const playlists = Rx.Observable.from(this.config.playlists);
 
-        const url_format = 'http://api.mp3.zing.vn/api/mobile/charts/getchartsinfo?keycode=%s&requestdata={"week":%s,"id":%d,"year":%s,"start":0,"length":40}&fromvn=0';
+        const songsFromCharts = charts.flatMap(chart => this.getSongsFromChart(chart));
+        const songsFromPlayLists = playlists.flatMap(playlist => this.getSongsFromPlaylist(playlist.url, playlist.name));
 
-        const weekNumber = moment().format("W");
-        const year = moment().format("gggg");
-        const url = util.format(url_format, this.apiKey, weekNumber, 1, year);
+        return Rx.Observable.merge(songsFromCharts, songsFromPlayLists).toArray();
+    }
 
-        const startingMessage = 'Getting latest songs for week ' + weekNumber + '/' + year;
-        this.notify('Starting NhacUpdater: ' + startingMessage);
-        this.logger.info(startingMessage);
-        this.logger.info('Requesting %s.', url);
+    getSongsFromPlaylist(url, playlistName) {
+        this.logger.info("Getting songs from playlist %s. URL: %s", playlistName, url);
 
         return Rx.Observable.create(obs => {
             request(url, (err, response, body) => {
-                if (!err && response.statusCode == 200) {
-                    const result = JSON.parse(body);
-                    const week = result.week;
-                    const songs = result.item;
+              if (!err && response.statusCode == 200) {
+                const result = JSON.parse(body);
+                const songs = result.docs;
 
-                    this.logger.info("Received response: %d songs.", songs.length);
-                    
-                    this.notify("Number of songs to update: " + songs.length);
+                this.logger.info("Received response: %d songs.", songs.length);
 
-                    obs.onNext(songs);
-                    obs.onCompleted();
+                this.notify("Number of songs to update: " + songs.length);
+
+                songs.forEach(song => obs.onNext(song));
+                obs.onCompleted();
                 } else {
-                    this.logger.error({err: err, res: response}, "Error while getting songs");
-                    obs.onError();
-                }
+                  this.logger.error({
+                            err: err,
+                            res: response
+                        }, "Error while getting songs");
+                        obs.onError();
+                    }
+                });
             });
-        });
-    }
-
-    notify(message) {
-        if (this.slackUpdater) {
-            this.slackUpdater.sendMessage(message);
         }
-    }
-};
 
-module.exports = NhacUpdater;
+        getSongsFromChart(urlFormat) {
+
+            const weekNumber = moment().format("W");
+            const year = moment().format("gggg");
+            const url = format(urlFormat, {
+                week: weekNumber,
+                id: 1,
+                year: year
+            });
+
+            const startingMessage = 'Getting latest songs for chart week ' + weekNumber + '/' + year;
+            this.logger.info(startingMessage);
+            this.logger.info('Requesting %s.', url);
+
+            return Rx.Observable.create(obs => {
+                request(url, (err, response, body) => {
+                    if (!err && response.statusCode == 200) {
+                        const result = JSON.parse(body);
+                        const week = result.week;
+                        const songs = result.item;
+
+                        this.logger.info("Received response: %d songs.", songs.length);
+
+                        this.notify("Number of songs to update: " + songs.length);
+
+                        songs.forEach(song => obs.onNext(song));
+                        obs.onCompleted();
+                    } else {
+                        this.logger.error({
+                            err: err,
+                            res: response
+                        }, "Error while getting songs");
+                        obs.onError();
+                    }
+                });
+            });
+        }
+
+        notify(message) {
+            if (this.slackUpdater) {
+                this.slackUpdater.sendMessage(message);
+            }
+        }
+    };
+
+    module.exports = NhacUpdater;
