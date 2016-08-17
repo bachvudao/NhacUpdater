@@ -15,7 +15,7 @@ if(config.slack){
   slackNotifier = new SlackNotifier(logFactory, config.slack);
 }
 
-const nhacUpdater = new NhacUpdater(logFactory, config.Zing.apiKey, config.db, slackNotifier);
+const nhacUpdater = new NhacUpdater(logFactory, config, slackNotifier);
 
 const scheduler = later.parse.text(config.schedule);
 
