@@ -46,70 +46,70 @@ class NhacUpdater {
 
         return Rx.Observable.create(obs => {
             request(url, (err, response, body) => {
-              if (!err && response.statusCode == 200) {
-                const result = JSON.parse(body);
-                const songs = result.docs;
+                if (!err && response.statusCode == 200) {
+                    const result = JSON.parse(body);
+                    const songs = result.docs;
 
-                this.logger.info("Received response: %d songs.", songs.length);
+                    this.logger.info("Received response: %d songs.", songs.length);
 
-                this.notify("Number of songs to update: " + songs.length);
+                    this.notify("Number of songs to update: " + songs.length);
 
-                songs.forEach(song => obs.onNext(song));
-                obs.onCompleted();
+                    songs.forEach(song => obs.onNext(song));
+                    obs.onCompleted();
                 } else {
-                  this.logger.error({
-                            err: err,
-                            res: response
-                        }, "Error while getting songs");
-                        obs.onError();
-                    }
-                });
+                    this.logger.error({
+                        err: err,
+                        res: response
+                    }, "Error while getting songs");
+                    obs.onError();
+                }
             });
-        }
+        });
+    }
 
-        getSongsFromChart(urlFormat) {
+    getSongsFromChart(urlFormat) {
 
-            const weekNumber = moment().format("W");
-            const year = moment().format("gggg");
-            const url = format(urlFormat, {
-                week: weekNumber,
-                id: 1,
-                year: year
+        const weekNumber = moment().format("W");
+        const year = moment().format("gggg");
+        const url = format(urlFormat, {
+            week: weekNumber,
+            id: 1,
+            year: year
+        });
+
+        const startingMessage = 'Getting latest songs for chart week ' + weekNumber + '/' + year;
+        this.logger.info(startingMessage);
+        this.logger.info('Requesting %s.', url);
+
+        return Rx.Observable.create(obs => {
+            request(url, (err, response, body) => {
+                if (!err && response.statusCode == 200) {
+                    const result = JSON.parse(body);
+                    const week = result.week;
+                    const songs = result.item;
+
+                    this.logger.info("Received response: %d songs.", songs.length);
+
+                    this.notify("Number of songs to update: " + songs.length);
+
+                    songs.forEach(song => obs.onNext(song));
+                    obs.onCompleted();
+                } else {
+                    this.logger.error({
+                        err: err,
+                        res: response
+                    }, "Error while getting songs");
+                    obs.onError();
+                }
             });
+        });
+    }
 
-            const startingMessage = 'Getting latest songs for chart week ' + weekNumber + '/' + year;
-            this.logger.info(startingMessage);
-            this.logger.info('Requesting %s.', url);
-
-            return Rx.Observable.create(obs => {
-                request(url, (err, response, body) => {
-                    if (!err && response.statusCode == 200) {
-                        const result = JSON.parse(body);
-                        const week = result.week;
-                        const songs = result.item;
-
-                        this.logger.info("Received response: %d songs.", songs.length);
-
-                        this.notify("Number of songs to update: " + songs.length);
-
-                        songs.forEach(song => obs.onNext(song));
-                        obs.onCompleted();
-                    } else {
-                        this.logger.error({
-                            err: err,
-                            res: response
-                        }, "Error while getting songs");
-                        obs.onError();
-                    }
-                });
-            });
+    notify(message) {
+        if (this.slackUpdater) {
+            this.slackUpdater.sendMessage(message);
         }
+    }
+};
 
-        notify(message) {
-            if (this.slackUpdater) {
-                this.slackUpdater.sendMessage(message);
-            }
-        }
-    };
-
-    module.exports = NhacUpdater;
+module.exports = NhacUpdater;

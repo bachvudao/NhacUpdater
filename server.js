@@ -11,8 +11,8 @@ const logFactory = new LogFactoryType(config);
 const logger = logFactory.createLogger('server');
 
 let slackNotifier = undefined;
-if(config.slack){
-  slackNotifier = new SlackNotifier(logFactory, config.slack);
+if (config.slack) {
+    slackNotifier = new SlackNotifier(logFactory, config.slack);
 }
 
 const nhacUpdater = new NhacUpdater(logFactory, config, slackNotifier);
@@ -24,13 +24,15 @@ const scheduler = later.parse.text(config.schedule);
 later.setInterval(publishHeartbeat, later.parse.text("every 10 mins"));
 
 const timer = new Rx.Subject();
-later.setInterval(() => {timer.onNext(1);}, scheduler);
+later.setInterval(() => {
+    timer.onNext(1);
+}, scheduler);
 
 timer.startWith(0).subscribe(val => {
-  execute().finally(() => {
-    logger.info('Waiting for next schedule run ' + later.schedule(scheduler).next(1));
-    logger.info('===============================================================');
-  }).subscribe();
+    execute().finally(() => {
+        logger.info('Waiting for next schedule run ' + later.schedule(scheduler).next(1));
+        logger.info('===============================================================');
+    }).subscribe();
 });
 
 function execute() {
@@ -38,11 +40,11 @@ function execute() {
     return nhacUpdater.update().doOnError(err => {
         logger.error('Error while updating songs: ' + err);
     }).finally(() => {
-        logger.info('Finished one run.');        
+        logger.info('Finished one run.');
         logger.info('===============================================================');
     });
 }
 
-function publishHeartbeat(){
-  logger.info("Heartbeat message. App is still alive");
+function publishHeartbeat() {
+    logger.info("Heartbeat message. App is still alive");
 }

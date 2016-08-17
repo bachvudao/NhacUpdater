@@ -49,23 +49,23 @@ class DatabaseConnection {
         this.logger.info("Adding %s songs", songs.length);
 
         return Rx.Observable.fromPromise(sql.connect(this.config))
-                            .flatMap(() => {
-                              this.logger.info("Got a connection to database");
+            .flatMap(() => {
+                this.logger.info("Got a connection to database");
 
-                              const songUpdates = [];
-                              songs.forEach(song => {
-                                songUpdates.push(this.executeInsertSong(song));
-                              });
+                const songUpdates = [];
+                songs.forEach(song => {
+                    songUpdates.push(this.executeInsertSong(song));
+                });
 
-                              return Rx.Observable.merge(songUpdates).doOnCompleted(() => {
-                                this.logger.info("Finished with all updates. Closing connection.");
-                                sql.close();
-                              });
-        }).catch(err => {
-            this.logger.error("Could not connect to db %s", err);
+                return Rx.Observable.merge(songUpdates).doOnCompleted(() => {
+                    this.logger.info("Finished with all updates. Closing connection.");
+                    sql.close();
+                });
+            }).catch(err => {
+                this.logger.error("Could not connect to db %s", err);
 
-            return Rx.Observable.return(undefined);
-        });
+                return Rx.Observable.return(undefined);
+            });
     }
 };
 
