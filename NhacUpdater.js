@@ -7,6 +7,12 @@ const moment = require('moment');
 const Connection = require('./DatabaseAccessor.js');
 const Rx = require('rx');
 
+Rx.Observable.prototype.doOnSubscribe = function(onSubscribeFunc) {
+  return Rx.Observable.defer(() => {
+    onSubscribeFunc();
+    return this;
+    });
+};
 
 class NhacUpdater {
 
@@ -18,12 +24,11 @@ class NhacUpdater {
     }
 
     update() {
-
-        this.notify("Starting NhacUpdater Run");
-        this.logger.info("Starting NhacUpdater Run");
-
         return this.getSongs().flatMap(songs => {
             return this.connection.insert(songs);
+        }).doOnSubscribe(() => {
+            this.notify("Starting NhacUpdater Run");
+            this.logger.info("Starting NhacUpdater Run");
         }).doOnError(err => {
             this.notify("Error while updating songs.");
         }).finally(() => {
